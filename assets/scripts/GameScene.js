@@ -27,15 +27,43 @@ class GameScene extends Phaser.Scene {
         this.openedCard = null;
         this.openedCardsCount = 0;
         this.initCrads();
+        this.showCards();
+    }
+
+    restart() {
+        let count = 0;
+        let onCardMoveComplete = () => {
+            ++count;
+            if(count >= this.cards.length) {
+                this.start(); 
+            }
+
+        };
+        this.cards.forEach(card => {
+            card.move({
+                x: this.sys.game.config.width + card.width,
+                y: this.sys.game.config.height + card.height,
+                delay: card.position.delay,
+                callback: onCardMoveComplete
+            })
+        })
     }
 
     initCrads() {
         let positions = this.getCardsPositions();
         this.cards.forEach(card => {
-            let position = positions.pop();
-            card.close();
-            card.setPosition(position.x, position.y)
+            card.init(positions.pop());
         });
+    }
+
+    showCards() {
+        this.cards.forEach(card => {
+            card.move({
+                x: card.position.x,
+                y: card.position.y,
+                delay: card.position.delay 
+            })
+        })
     }
 
     createBackground() {
@@ -74,7 +102,7 @@ class GameScene extends Phaser.Scene {
         card.open();
 
         if(this.openedCardsCount === this.cards.length / 2) {
-            this.start();
+            this.restart();
         }
     }
 
@@ -83,12 +111,14 @@ class GameScene extends Phaser.Scene {
         let cardTexture = this.textures.get('card').getSourceImage();
         let cardWidth = cardTexture.width + 10;
         let cardHeight = cardTexture.height + 10;
-        let offsetX = ( this.sys.game.config.width - cardWidth * config.cols ) / 2;
-        let offsetY = ( this.sys.game.config.height - cardHeight * config.rows ) / 2;
+        let offsetX = ( this.sys.game.config.width - cardWidth * config.cols ) / 2 + cardWidth / 2;
+        let offsetY = ( this.sys.game.config.height - cardHeight * config.rows ) / 2 + cardHeight / 2;
+        let id = 0;
 
         for(let row = 0; row<config.rows; row++) {
             for(let col = 0; col<config.cols; col++) {
                 positions.push({
+                    delay: ++id * 150,
                     x: offsetX + col * cardWidth,
                     y: offsetY + row * cardHeight
                 })
